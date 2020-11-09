@@ -40,22 +40,23 @@ public class UUID {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     public UUIDInfo build() {
         Context context = mContext.get();
         uuidInfo = new UUIDInfo();
         genAndroidId(context);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    genImei(context);
-                } else {
-                    genImeiAndMeid(context);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        genImei(context);
+                    } else {
+                        genImeiAndMeid(context);
+                    }
                 }
+            } else {
+                genImeiAndMeid(context);
             }
-        } else {
-            genImeiAndMeid(context);
         }
         genWifiMac(context);
         genSerialno();
