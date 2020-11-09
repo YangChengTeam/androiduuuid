@@ -45,25 +45,14 @@ public class UUID {
         uuidInfo = new UUIDInfo();
         genAndroidId(context);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        genImei(context);
-                    } else {
-                        genImeiAndMeid(context);
-                    }
-                }
-            } else {
-                genImeiAndMeid(context);
-            }
-        }
+        genImei2(context);
         genWifiMac(context);
         genSerialno(context);
         genUUid();
         genOaId(context);
         return uuidInfo;
     }
+
 
     public static UUID getInstance(Context context) {
         if (instance == null) {
@@ -80,6 +69,22 @@ public class UUID {
         String androidId = Settings.Secure.getString(context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         uuidInfo.setAndroidId(androidId);
+    }
+
+    private void genImei2(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        genImei(context);
+                    } else {
+                        genImeiAndMeid(context);
+                    }
+                }
+            } else {
+                genImeiAndMeid(context);
+            }
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -134,21 +139,22 @@ public class UUID {
             Method get = c.getMethod("get", String.class);
             String serialno = (String) get.invoke(c, "ro.serialno");
             uuidInfo.setSerialno(serialno);
-            return;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
-            uuidInfo.setUuid(android.os.Build.SERIAL);
-        }
+        if (TextUtils.isEmpty(uuidInfo.getSerialno()) && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
+                uuidInfo.setUuid(android.os.Build.SERIAL);
+            }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    uuidInfo.setUuid(android.os.Build.getSerial());
-                } else {
-                    uuidInfo.setUuid(android.os.Build.SERIAL);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        uuidInfo.setUuid(android.os.Build.getSerial());
+                    } else {
+                        uuidInfo.setUuid(android.os.Build.SERIAL);
+                    }
                 }
             }
         }
