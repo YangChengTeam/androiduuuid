@@ -59,7 +59,7 @@ public class UUID {
             }
         }
         genWifiMac(context);
-        genSerialno();
+        genSerialno(context);
         genUUid();
         genOaId(context);
         return uuidInfo;
@@ -128,15 +128,31 @@ public class UUID {
         uuidInfo.setImei2(tm.getImei(1));
     }
 
-    private void genSerialno() {
+    private void genSerialno(Context context) {
         try {
             Class<?> c = Class.forName("android.os.SystemProperties");
             Method get = c.getMethod("get", String.class);
             String serialno = (String) get.invoke(c, "ro.serialno");
             uuidInfo.setSerialno(serialno);
+            return;
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
+            uuidInfo.setUuid(android.os.Build.SERIAL);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    uuidInfo.setUuid(android.os.Build.getSerial());
+                } else {
+                    uuidInfo.setUuid(android.os.Build.SERIAL);
+                }
+            }
+        }
+
     }
 
     public void genWifiMac(Context context) {
@@ -147,7 +163,7 @@ public class UUID {
     }
 
     public void genUUid() {
-        String uniqueID = java.util.UUID.randomUUID().toString();
+        String uniqueID = java.util.UUID.randomUUID().toString().replaceAll("-", "");
         uuidInfo.setUuid(uniqueID);
     }
 

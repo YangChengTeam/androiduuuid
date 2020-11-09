@@ -1,17 +1,16 @@
 package com.yc.uuid;
 
+import android.text.TextUtils;
+
 public class UUIDInfo {
     private String imei;
     private String imei2;
     private String androidId;
-    private String btmac;
     private String wifimac;
     private String oaid;
     private String uuid;
     private String meid;
     private String serialno;
-
-    private String deviceId;
 
     public String getImei() {
         return imei;
@@ -27,22 +26,6 @@ public class UUIDInfo {
 
     public void setImei2(String imei2) {
         this.imei2 = imei2;
-    }
-
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
-    }
-
-    public String getBtmac() {
-        return btmac;
-    }
-
-    public void setBtmac(String btmac) {
-        this.btmac = btmac;
     }
 
     public String getWifimac() {
