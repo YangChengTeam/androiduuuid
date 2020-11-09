@@ -7,8 +7,9 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.yc.uuid.UUID;
-import com.yc.uuid.UUIDInfo;
+import com.yc.uuid.UDID;
+import com.yc.uuid.UDIDInfo;
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -22,8 +23,8 @@ public class MainActivity extends AppCompatActivity {
         permissionHelper.checkAndRequestPermission(this, new PermissionHelper.OnRequestPermissionsCallback() {
             @Override
             public void onRequestPermissionSuccess() {
-                UUIDInfo uuidInfo = UUID.getInstance(MainActivity.this).build();
-                Log.d("############", uuidInfo.getOaid());
+                UDIDInfo udidInfo = UDID.getInstance(MainActivity.this).build();
+                Log.d("############", udidInfo.getOaid()+"");
             }
 
             @Override
@@ -31,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
     }
 
     @Override

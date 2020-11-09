@@ -1,7 +1,5 @@
 package com.yc.uuid;
 
-import android.text.TextUtils;
-
 public class UDIDInfo {
     private String imei;
     private String imei2;

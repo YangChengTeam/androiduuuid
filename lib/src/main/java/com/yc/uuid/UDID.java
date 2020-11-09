@@ -42,7 +42,6 @@ public class UDID {
         Context context = mContext.get();
         UDIDInfo = new UDIDInfo();
         genAndroidId(context);
-
         genImei2(context);
         genWifiMac(context);
         genSerialno(context);
