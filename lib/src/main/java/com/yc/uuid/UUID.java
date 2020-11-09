@@ -33,8 +33,11 @@ public class UUID {
 
     private UUID(Context context) {
         mContext = new WeakReference<>(context);
+    }
+
+    public void init(){
         try {
-            JLibrary.InitEntry(context);
+            JLibrary.InitEntry(mContext.get());
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRequestPermissionSuccess() {
                 UUIDInfo uuidInfo = UUID.getInstance(MainActivity.this).build();
-                Log.d("############", uuidInfo.toString());
+                Log.d("############", uuidInfo.getOaid());
             }
 
             @Override
