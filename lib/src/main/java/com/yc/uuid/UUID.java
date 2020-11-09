@@ -57,7 +57,6 @@ public class UUID {
         } else {
             genImeiAndMeid(context);
         }
-        genBtMac(context);
         genWifiMac(context);
         genSerialno();
         genUUid();
@@ -137,33 +136,6 @@ public class UUID {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @SuppressLint("ServiceCast")
-    public void genBtMac(Context context) {
-        BluetoothAdapter ba = BluetoothAdapter.getDefaultAdapter();
-        ;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            try {
-                Field mServiceField = ba.getClass().getDeclaredField("mService");
-                mServiceField.setAccessible(true);
-                Object btManagerService = mServiceField.get(ba);
-                if (btManagerService != null) {
-                    uuidInfo.setBtmac((String) btManagerService.getClass().getMethod("getAddress").invoke(btManagerService));
-                }
-            } catch (NoSuchFieldException e) {
-
-            } catch (NoSuchMethodException e) {
-
-            } catch (IllegalAccessException e) {
-
-            } catch (InvocationTargetException e) {
-
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            ba = (BluetoothAdapter) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        }
-        uuidInfo.setBtmac(ba.getAddress());
     }
 
     public void genWifiMac(Context context) {
