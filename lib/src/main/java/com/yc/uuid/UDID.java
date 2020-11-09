@@ -1,10 +1,8 @@
 package com.yc.uuid;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiInfo;
@@ -14,24 +12,21 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
-import androidx.annotation.RequiresApi;
-
 import com.bun.miitmdid.core.JLibrary;
 
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class UUID {
+public class UDID {
 
-    public static UUID instance;
+    public static UDID instance;
     private WeakReference<Context> mContext;
-    private UUIDInfo uuidInfo;
+    private UDIDInfo UDIDInfo;
 
-    private UUID(Context context) {
+    private UDID(Context context) {
         mContext = new WeakReference<>(context);
     }
 
@@ -43,9 +38,9 @@ public class UUID {
         }
     }
 
-    public UUIDInfo build() {
+    public UDIDInfo build() {
         Context context = mContext.get();
-        uuidInfo = new UUIDInfo();
+        UDIDInfo = new UDIDInfo();
         genAndroidId(context);
 
         genImei2(context);
@@ -53,15 +48,15 @@ public class UUID {
         genSerialno(context);
         genUUid();
         genOaId(context);
-        return uuidInfo;
+        return UDIDInfo;
     }
 
 
-    public static UUID getInstance(Context context) {
+    public static UDID getInstance(Context context) {
         if (instance == null) {
-            synchronized ((UUID.class)) {
+            synchronized ((UDID.class)) {
                 if (instance == null) {
-                    instance = new UUID(context);
+                    instance = new UDID(context);
                 }
             }
         }
@@ -71,7 +66,7 @@ public class UUID {
     public void genAndroidId(Context context) {
         String androidId = Settings.Secure.getString(context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
-        uuidInfo.setAndroidId(androidId);
+        UDIDInfo.setAndroidId(androidId);
     }
 
     private void genImei2(Context context) {
@@ -103,21 +98,21 @@ public class UUID {
             if (!TextUtils.isEmpty(gsm)) {
                 String imeiArray[] = gsm.split(",");
                 if (imeiArray != null && imeiArray.length > 0) {
-                    uuidInfo.setImei(imeiArray[0]);
+                    UDIDInfo.setImei(imeiArray[0]);
                     if (imeiArray.length > 1) {
-                        uuidInfo.setImei2(imeiArray[1]);
+                        UDIDInfo.setImei2(imeiArray[1]);
                     } else {
-                        uuidInfo.setImei2(mTelephonyManager.getDeviceId(1));
+                        UDIDInfo.setImei2(mTelephonyManager.getDeviceId(1));
                     }
                 } else {
-                    uuidInfo.setImei(mTelephonyManager.getDeviceId(0));
-                    uuidInfo.setImei2(mTelephonyManager.getDeviceId(1));
+                    UDIDInfo.setImei(mTelephonyManager.getDeviceId(0));
+                    UDIDInfo.setImei2(mTelephonyManager.getDeviceId(1));
                 }
             } else {
-                uuidInfo.setImei(mTelephonyManager.getDeviceId(0));
-                uuidInfo.setImei2(mTelephonyManager.getDeviceId(1));
+                UDIDInfo.setImei(mTelephonyManager.getDeviceId(0));
+                UDIDInfo.setImei2(mTelephonyManager.getDeviceId(1));
             }
-            uuidInfo.setMeid(meid);
+            UDIDInfo.setMeid(meid);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
@@ -132,8 +127,8 @@ public class UUID {
     @TargetApi(Build.VERSION_CODES.O)
     public void genImei(Context context) {
         TelephonyManager tm = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
-        uuidInfo.setImei(tm.getImei(0));
-        uuidInfo.setImei2(tm.getImei(1));
+        UDIDInfo.setImei(tm.getImei(0));
+        UDIDInfo.setImei2(tm.getImei(1));
     }
 
     private void genSerialno(Context context) {
@@ -141,22 +136,22 @@ public class UUID {
             Class<?> c = Class.forName("android.os.SystemProperties");
             Method get = c.getMethod("get", String.class);
             String serialno = (String) get.invoke(c, "ro.serialno");
-            uuidInfo.setSerialno(serialno);
+            UDIDInfo.setSerialno(serialno);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (TextUtils.isEmpty(uuidInfo.getSerialno()) && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+        if (TextUtils.isEmpty(UDIDInfo.getSerialno()) && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
-                uuidInfo.setUuid(android.os.Build.SERIAL);
+                UDIDInfo.setUuid(android.os.Build.SERIAL);
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        uuidInfo.setUuid(android.os.Build.getSerial());
+                        UDIDInfo.setUuid(android.os.Build.getSerial());
                     } else {
-                        uuidInfo.setUuid(android.os.Build.SERIAL);
+                        UDIDInfo.setUuid(android.os.Build.SERIAL);
                     }
                 }
             }
@@ -168,12 +163,12 @@ public class UUID {
         WifiManager wifiMan = (WifiManager) context.getSystemService(
                 Context.WIFI_SERVICE);
         WifiInfo wifiInf = wifiMan.getConnectionInfo();
-        uuidInfo.setWifimac(wifiInf.getMacAddress());
+        UDIDInfo.setWifimac(wifiInf.getMacAddress());
     }
 
     public void genUUid() {
         String uniqueID = java.util.UUID.randomUUID().toString().replaceAll("-", "");
-        uuidInfo.setUuid(uniqueID);
+        UDIDInfo.setUuid(uniqueID);
     }
 
     public void genOaId(Context context) {
@@ -181,7 +176,7 @@ public class UUID {
             MiitHelper miitHelper = new MiitHelper();
             JSONObject result = miitHelper.getDeviceIds(context);
             if (result != null && result.getString("oaid") != null) {
-                uuidInfo.setOaid(result.getString("oaid"));
+                UDIDInfo.setOaid(result.getString("oaid"));
             }
         } catch (Exception e) {
             e.printStackTrace();

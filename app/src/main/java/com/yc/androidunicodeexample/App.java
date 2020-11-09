@@ -4,15 +4,15 @@ import android.app.Application;
 import android.content.Context;
 
 import com.bun.miitmdid.core.JLibrary;
+import com.yc.uuid.UUID;
+import com.yc.uuid.UUIDInfo;
+
 
 public class App extends Application {
     @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        try {
-            JLibrary.InitEntry(base);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void onCreate() {
+        super.onCreate();
+        UUID.getInstance(this).init();
+
     }
 }
