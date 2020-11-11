@@ -1,53 +1,17 @@
 package com.yc.uuid;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.bun.miitmdid.core.ErrorCode;
 import com.bun.miitmdid.core.MdidSdkHelper;
 import com.bun.supplier.IIdentifierListener;
-import com.bun.supplier.IdSupplier;
-
-import org.json.JSONObject;
 
 
-public class MiitHelper implements IIdentifierListener {
-
-    private boolean isSupport;
-    private String oaid, vaid, aaid;
-
-    public JSONObject getDeviceIds(Context cxt) {
-        long startTime = System.currentTimeMillis();
-        int code = CallFromReflect(cxt);
-        long endTime = System.currentTimeMillis();
-        long time = endTime - startTime;
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("description", descriptionCode(code));
-            jsonObject.put("code", code);
-            jsonObject.put("time", time);
-            jsonObject.put("isSupport", isSupport);
-            jsonObject.put("oaid", oaid);
-            jsonObject.put("vaid", vaid);
-            jsonObject.put("aaid", aaid);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return jsonObject;
-    }
-
-    private int CallFromReflect(Context cxt) {
-        return MdidSdkHelper.InitSdk(cxt, true, this);
-    }
-
-
-    @Override
-    public void OnSupport(boolean isSupport, IdSupplier _supplier) {
-        this.isSupport = isSupport;
-        if (_supplier != null) {
-            this.oaid = _supplier.getOAID();
-            this.vaid = _supplier.getVAID();
-            this.aaid = _supplier.getAAID();
-        }
+public class MiitHelper {
+    public void getDeviceIds(Context cxt, IIdentifierListener iIdentifierListener) {
+        int code = MdidSdkHelper.InitSdk(cxt, true, iIdentifierListener);
+        Log.d("MiitHelper", descriptionCode(code));
     }
 
     private String descriptionCode(int code) {

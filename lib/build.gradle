@@ -12,6 +12,20 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        defaultConfig {
+            ndk {
+                abiFilters 'armeabi-v7a','x86','arm64-v8a','x86_64','armeabi'
+            }
+            packagingOptions {
+                doNotStrip "*/armeabi-v7a/*.so"
+                doNotStrip "*/x86/*.so"
+                doNotStrip "*/arm64-v8a/*.so"
+                doNotStrip "*/x86_64/*.so"
+                doNotStrip "armeabi.so"
+            }
+        }
+
     }
 
     buildTypes {
@@ -27,7 +41,7 @@ ext {
     GITHUB_REPO_PATH = "AAR"
     PUBLISH_GROUP_ID = 'com.yc.uuid'
     PUBLISH_ARTIFACT_ID = 'aar'
-    PUBLISH_VERSION = '1.0.7'
+    PUBLISH_VERSION = '1.0.8'
 }
 
 uploadArchives {

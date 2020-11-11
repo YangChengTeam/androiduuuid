@@ -13,6 +13,8 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.bun.miitmdid.core.JLibrary;
+import com.bun.supplier.IIdentifierListener;
+import com.bun.supplier.IdSupplier;
 
 import org.json.JSONObject;
 
@@ -30,7 +32,7 @@ public class UDID {
         mContext = new WeakReference<>(context);
     }
 
-    public void init(){
+    public void init() {
         try {
             JLibrary.InitEntry(mContext.get());
         } catch (Exception e) {
@@ -173,10 +175,14 @@ public class UDID {
     public void genOaId(Context context) {
         try {
             MiitHelper miitHelper = new MiitHelper();
-            JSONObject result = miitHelper.getDeviceIds(context);
-            if (result != null && result.getString("oaid") != null) {
-                UDIDInfo.setOaid(result.getString("oaid"));
-            }
+            miitHelper.getDeviceIds(context, new IIdentifierListener() {
+                @Override
+                public void OnSupport(boolean b, IdSupplier idSupplier) {
+                    if (idSupplier != null) {
+                        UDIDInfo.setOaid(idSupplier.getOAID());
+                    }
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
