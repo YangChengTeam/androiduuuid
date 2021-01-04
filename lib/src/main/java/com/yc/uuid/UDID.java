@@ -1,6 +1,7 @@
 package com.yc.uuid;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -12,6 +13,8 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
+import androidx.annotation.RequiresPermission;
+
 import com.bun.miitmdid.core.JLibrary;
 import com.bun.supplier.IIdentifierListener;
 import com.bun.supplier.IdSupplier;
@@ -21,6 +24,14 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+
+import static android.Manifest.permission.ACCESS_WIFI_STATE;
+import static android.Manifest.permission.CHANGE_WIFI_STATE;
+import static android.content.Context.WIFI_SERVICE;
 
 public class UDID {
 
@@ -160,11 +171,174 @@ public class UDID {
 
     }
 
+    @RequiresPermission(allOf = {ACCESS_WIFI_STATE})
+    public  String getMacAddress(final String... excepts) {
+        String macAddress = getMacAddressByNetworkInterface();
+        if (isAddressNotInExcepts(macAddress, excepts)) {
+            return macAddress;
+        }
+        macAddress = getMacAddressByInetAddress();
+        if (isAddressNotInExcepts(macAddress, excepts)) {
+            return macAddress;
+        }
+        macAddress = getMacAddressByWifiInfo();
+        if (isAddressNotInExcepts(macAddress, excepts)) {
+            return macAddress;
+        }
+        macAddress = getMacAddressByFile();
+        if (isAddressNotInExcepts(macAddress, excepts)) {
+            return macAddress;
+        }
+        return "";
+    }
+
+    private  boolean isAddressNotInExcepts(final String address, final String... excepts) {
+        if (TextUtils.isEmpty(address)) {
+            return false;
+        }
+        if ("02:00:00:00:00:00".equals(address)) {
+            return false;
+        }
+        if (excepts == null || excepts.length == 0) {
+            return true;
+        }
+        for (String filter : excepts) {
+            if (filter != null && filter.equals(address)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @RequiresPermission(ACCESS_WIFI_STATE)
+    private  String getMacAddressByWifiInfo() {
+        try {
+            final WifiManager wifi = (WifiManager)mContext.get().getApplicationContext().getSystemService(WIFI_SERVICE);
+            if (wifi != null) {
+                final WifiInfo info = wifi.getConnectionInfo();
+                if (info != null) {
+                    @SuppressLint("HardwareIds")
+                    String macAddress = info.getMacAddress();
+                    if (!TextUtils.isEmpty(macAddress)) {
+                        return macAddress;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "02:00:00:00:00:00";
+    }
+
+    private  String getMacAddressByNetworkInterface() {
+        try {
+            Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                if (ni == null || !ni.getName().equalsIgnoreCase("wlan0")) continue;
+                byte[] macBytes = ni.getHardwareAddress();
+                if (macBytes != null && macBytes.length > 0) {
+                    StringBuilder sb = new StringBuilder();
+                    for (byte b : macBytes) {
+                        sb.append(String.format("%02x:", b));
+                    }
+                    return sb.substring(0, sb.length() - 1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "02:00:00:00:00:00";
+    }
+
+    private  String getMacAddressByInetAddress() {
+        try {
+            InetAddress inetAddress = getInetAddress();
+            if (inetAddress != null) {
+                NetworkInterface ni = NetworkInterface.getByInetAddress(inetAddress);
+                if (ni != null) {
+                    byte[] macBytes = ni.getHardwareAddress();
+                    if (macBytes != null && macBytes.length > 0) {
+                        StringBuilder sb = new StringBuilder();
+                        for (byte b : macBytes) {
+                            sb.append(String.format("%02x:", b));
+                        }
+                        return sb.substring(0, sb.length() - 1);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "02:00:00:00:00:00";
+    }
+
+    private  InetAddress getInetAddress() {
+        try {
+            Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                // To prevent phone of xiaomi return "10.0.2.15"
+                if (!ni.isUp()) continue;
+                Enumeration<InetAddress> addresses = ni.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress inetAddress = addresses.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        String hostAddress = inetAddress.getHostAddress();
+                        if (hostAddress.indexOf(':') < 0) return inetAddress;
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private  String getMacAddressByFile() {
+        ShellUtils.CommandResult result = ShellUtils.execCmd("getprop wifi.interface", false);
+        if (result.result == 0) {
+            String name = result.successMsg;
+            if (name != null) {
+                result = ShellUtils.execCmd("cat /sys/class/net/" + name + "/address", false);
+                if (result.result == 0) {
+                    String address = result.successMsg;
+                    if (address != null && address.length() > 0) {
+                        return address;
+                    }
+                }
+            }
+        }
+        return "02:00:00:00:00:00";
+    }
+
+    private  boolean getWifiEnabled() {
+        @SuppressLint("WifiManagerLeak")
+        WifiManager manager = (WifiManager) mContext.get().getApplicationContext().getSystemService(WIFI_SERVICE);
+        if (manager == null) return false;
+        return manager.isWifiEnabled();
+    }
+
+    @RequiresPermission(CHANGE_WIFI_STATE)
+    private void setWifiEnabled(final boolean enabled) {
+        @SuppressLint("WifiManagerLeak")
+        WifiManager manager = (WifiManager) mContext.get().getApplicationContext().getSystemService(WIFI_SERVICE);
+        if (manager == null) return;
+        if (enabled == manager.isWifiEnabled()) return;
+        manager.setWifiEnabled(enabled);
+    }
+
+     public String getMacAddress() {
+        String macAddress = getMacAddress((String[]) null);
+        if (!TextUtils.isEmpty(macAddress) || getWifiEnabled()) return macAddress;
+        setWifiEnabled(true);
+        setWifiEnabled(false);
+        return getMacAddress((String[]) null);
+    }
+
+
     public void genWifiMac(Context context) {
-        WifiManager wifiMan = (WifiManager) context.getSystemService(
-                Context.WIFI_SERVICE);
-        WifiInfo wifiInf = wifiMan.getConnectionInfo();
-        UDIDInfo.setWifimac(wifiInf.getMacAddress());
+        UDIDInfo.setWifimac(getMacAddress());
     }
 
     public void genUUid() {
